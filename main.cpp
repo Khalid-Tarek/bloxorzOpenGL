@@ -3,10 +3,11 @@
 #define WINDOW_WIDTH			720
 #define WINDOW_HEIGHT			720
 #define BACKGROUND_COLOR		1, 0.4, 0, 1
+
 #define BOARD_DIMENSIONS		5
 
-#define BLOCK_VERTICAL			1
-#define BLOCK_HORIZONTAL		2
+#define BLOCK_VERTICAL			true
+#define BLOCK_HORIZONTAL		false
 #define DIRECTION_X				true
 #define DIRECTION_Z				false
 
@@ -14,7 +15,13 @@
 #define Y						1
 #define Z						2
 
-double rotateX = 45;
+#define PLAYING					100
+#define WON						200
+#define LOST					300
+
+int gameState = PLAYING;
+
+double rotateX = 30;
 double rotateY = 30;
 
 /*double angleStep = 5;
@@ -27,18 +34,19 @@ double rotateBlock = 0;*/
  * T -> Trap
  */
 char board[BOARD_DIMENSIONS][BOARD_DIMENSIONS] = {
-	{'F', 'X', 'F', 'X', 'F'},
-	{'F', 'F', 'X', 'F', 'F'},
-	{'X', 'F', 'X', 'F', 'F'},
+	{'F', 'F', 'F', 'F', 'F'},
+	{'F', 'F', 'F', 'F', 'F'},
+	{'F', 'F', 'F', 'F', 'F'},
 	{'F', 'F', 'F', 'W', 'F'},
-	{'F', 'X', 'F', 'F', 'F'}
+	{'F', 'F', 'F', 'F', 'F'}
 };
-double startingPosition[2] = {4, 4};
+double winningPosition[2] = {3,3};
+double startingPosition[2] = {0, 4};
 
 double blockPosition[3] = {startingPosition[0], 1.12, startingPosition[1]};
 double blockDimens[3] = {1, 2, 1};
 double blockColor[3] = {1, 0, 0};
-int	   blockOrientation = BLOCK_VERTICAL;
+bool   blockOrientation = BLOCK_VERTICAL;
 bool   movementDirection = DIRECTION_X;
 
 /*double blockPosition[3] = {startingPosition[0], 1.12 - 0.5, startingPosition[1]};
@@ -148,7 +156,39 @@ void display(){
 
 	drawBoard(board);
 
-	drawCuboid(blockPosition, blockDimens, blockColor);
+	if(blockPosition[X] == winningPosition[0] && blockPosition[Z] == winningPosition[1]) {
+		gameState = WON;
+		//TODO: ADD "YOU WON" POP UP
+	}
+
+	if(blockPosition[X] < 0 || blockPosition[X] > BOARD_DIMENSIONS - 1 ||
+		blockPosition[Z] < 0 || blockPosition[Z] > BOARD_DIMENSIONS - 1){
+		gameState = LOST;
+		//TODO: ADD "YOU LOST" POP UP
+	}
+
+	if(blockOrientation == BLOCK_VERTICAL){
+		if(board[(int)blockPosition[Z]][(int)blockPosition[X]] == 'X'){
+			gameState = LOST;
+		}
+	}
+	else if(blockOrientation == BLOCK_HORIZONTAL){
+		if(movementDirection == DIRECTION_X){
+			if(board[(int)(blockPosition[Z])][(int)(blockPosition[X] - 0.5)] == 'X' ||
+				board[(int)(blockPosition[Z])][(int)(blockPosition[X] + 0.5)] == 'X'){
+				gameState = LOST;
+			}
+		
+		}else if(movementDirection == DIRECTION_Z){
+			if(board[(int)(blockPosition[Z] - 0.5)][(int)(blockPosition[X])] == 'X' ||
+				board[(int)(blockPosition[Z] + 0.5)][(int)(blockPosition[X])] == 'X'){
+				gameState = LOST;
+			}
+		}
+	}
+
+	if(gameState == PLAYING)
+		drawCuboid(blockPosition, blockDimens, blockColor);
 
 	glutSwapBuffers();
 }
@@ -181,15 +221,14 @@ void arrows(int key, int x, int y){
 }
 
 void keyboard(unsigned char key, int x, int y) {
+	if(key == 27) exit(0);
+	if(gameState != PLAYING) return;
 	switch(key){
-	case 27:
-		exit(0);
-		break;
 	case 'w':
 		if(blockOrientation == BLOCK_VERTICAL){
 			blockOrientation = BLOCK_HORIZONTAL;
-			blockPosition[Y] = blockPosition[Y] - 0.5;
-			blockPosition[Z] = blockPosition[Z] - 1.5;
+			blockPosition[Y] -= 0.5;
+			blockPosition[Z] -= 1.5;
 			blockDimens[Y] = 1;
 			blockDimens[Z] = 2;
 			movementDirection = DIRECTION_Z;
@@ -197,11 +236,11 @@ void keyboard(unsigned char key, int x, int y) {
 		}
 		else{
 			if(movementDirection == DIRECTION_X)
-				blockPosition[Z] = blockPosition[Z] - 1;
+				blockPosition[Z] -= 1;
 			else if(movementDirection == DIRECTION_Z){
 				blockOrientation = BLOCK_VERTICAL;
-				blockPosition[Y] = blockPosition[Y] + 0.5;
-				blockPosition[Z] = blockPosition[Z] - 1.5;
+				blockPosition[Y] += 0.5;
+				blockPosition[Z] -= 1.5;
 				blockDimens[Y] = 2;
 				blockDimens[Z] = 1;
 			}
@@ -210,19 +249,19 @@ void keyboard(unsigned char key, int x, int y) {
 	case 's':
 		if(blockOrientation == BLOCK_VERTICAL){
 			blockOrientation = BLOCK_HORIZONTAL;
-			blockPosition[Y] = blockPosition[Y] - 0.5;
-			blockPosition[Z] = blockPosition[Z] + 1.5;
+			blockPosition[Y] -= 0.5;
+			blockPosition[Z] += 1.5;
 			blockDimens[Y] = 1;
 			blockDimens[Z] = 2;
 			movementDirection = DIRECTION_Z;
 		}
 		else{
 			if(movementDirection == DIRECTION_X)
-				blockPosition[Z] = blockPosition[Z] + 1;
+				blockPosition[Z] += 1;
 			else if(movementDirection == DIRECTION_Z){
 				blockOrientation = BLOCK_VERTICAL;
-				blockPosition[Y] = blockPosition[Y] + 0.5;
-				blockPosition[Z] = blockPosition[Z] + 1.5;
+				blockPosition[Y] += 0.5;
+				blockPosition[Z] += 1.5;
 				blockDimens[Y] = 2;
 				blockDimens[Z] = 1;
 			}

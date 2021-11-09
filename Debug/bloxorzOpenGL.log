@@ -1,7 +1,7 @@
-﻿Build started 11/9/2021 8:04:45 PM.
+﻿Build started 11/9/2021 9:50:25 PM.
      1>Project "F:\Live Data\Study Material\Semester (7) - Fall 2021-22\3D Graphics\Project\Group B\bloxorzOpenGL\bloxorzOpenGL.vcxproj" on node 2 (build target(s)).
      1>InitializeBuildStatus:
-         Touching "Debug\bloxorzOpenGL.unsuccessfulbuild".
+         Creating "Debug\bloxorzOpenGL.unsuccessfulbuild" because "AlwaysCreate" was specified.
        ClCompile:
          C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /I"C:\Program Files (x86)\Microsoft Visual Studio 10.0\glut-3.7.6-bin" /ZI /nologo /W3 /WX- /Od /Oy- /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt main.cpp
          main.cpp
@@ -18,4 +18,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:02.76
+Time Elapsed 00:00:02.81
