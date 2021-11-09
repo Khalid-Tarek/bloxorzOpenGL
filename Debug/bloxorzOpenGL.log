@@ -1,0 +1,21 @@
+﻿Build started 11/9/2021 4:55:50 PM.
+     1>Project "F:\Live Data\Study Material\Semester (7) - Fall 2021-22\3D Graphics\Project\Group B\bloxorzOpenGL\bloxorzOpenGL.vcxproj" on node 2 (build target(s)).
+     1>InitializeBuildStatus:
+         Creating "Debug\bloxorzOpenGL.unsuccessfulbuild" because "AlwaysCreate" was specified.
+       ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /I"C:\Program Files (x86)\Microsoft Visual Studio 10.0\glut-3.7.6-bin" /ZI /nologo /W3 /WX- /Od /Oy- /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt main.cpp
+         main.cpp
+       Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"F:\Live Data\Study Material\Semester (7) - Fall 2021-22\3D Graphics\Project\Group B\bloxorzOpenGL\Debug\bloxorzOpenGL.exe" /NOLOGO /LIBPATH:"C:\Program Files (x86)\Microsoft Visual Studio 10.0\glut-3.7.6-bin" glut32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /ManifestFile:"Debug\bloxorzOpenGL.exe.intermediate.manifest" /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /DEBUG /PDB:"F:\Live Data\Study Material\Semester (7) - Fall 2021-22\3D Graphics\Project\Group B\bloxorzOpenGL\Debug\bloxorzOpenGL.pdb" /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"F:\Live Data\Study Material\Semester (7) - Fall 2021-22\3D Graphics\Project\Group B\bloxorzOpenGL\Debug\bloxorzOpenGL.lib" /MACHINE:X86 Debug\main.obj
+         LINK : F:\Live Data\Study Material\Semester (7) - Fall 2021-22\3D Graphics\Project\Group B\bloxorzOpenGL\Debug\bloxorzOpenGL.exe not found or not built by the last incremental link; performing full link
+         bloxorzOpenGL.vcxproj -> F:\Live Data\Study Material\Semester (7) - Fall 2021-22\3D Graphics\Project\Group B\bloxorzOpenGL\Debug\bloxorzOpenGL.exe
+       Manifest:
+         C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\bin\mt.exe /nologo /verbose /outputresource:"F:\Live Data\Study Material\Semester (7) - Fall 2021-22\3D Graphics\Project\Group B\bloxorzOpenGL\Debug\bloxorzOpenGL.exe;#1" /manifest Debug\bloxorzOpenGL.exe.intermediate.manifest
+       FinalizeBuildStatus:
+         Deleting file "Debug\bloxorzOpenGL.unsuccessfulbuild".
+         Touching "Debug\bloxorzOpenGL.lastbuildstate".
+     1>Done Building Project "F:\Live Data\Study Material\Semester (7) - Fall 2021-22\3D Graphics\Project\Group B\bloxorzOpenGL\bloxorzOpenGL.vcxproj" (build target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:00:02.28
