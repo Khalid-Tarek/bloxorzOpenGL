@@ -1,11 +1,88 @@
 #include <GL\glut.h>
 
-#define WINDOW_WIDTH			1024
+#define WINDOW_WIDTH			720
 #define WINDOW_HEIGHT			720
-#define BACKGROUND_COLOR		0.4, 0.15, 0, 1
+#define BACKGROUND_COLOR		1, 0.4, 0, 1
+#define BOARD_DIMENSIONS		5
 
-double rotateX = 0;
-double rotateY = 0;
+#define BLOCK_VERTICAL			1
+#define BLOCK_HORIZONTAL		2
+#define DIRECTION_X				true
+#define DIRECTION_Z				false
+
+#define X						0
+#define Y						1
+#define Z						2
+
+double rotateX = 45;
+double rotateY = 30;
+
+/*double angleStep = 5;
+double rotateBlock = 0;*/
+
+/**
+ * F -> Filled Tile
+ * X -> Empty Tile
+ * W -> Win Tile
+ * T -> Trap
+ */
+char board[BOARD_DIMENSIONS][BOARD_DIMENSIONS] = {
+	{'F', 'X', 'F', 'X', 'F'},
+	{'F', 'F', 'X', 'F', 'F'},
+	{'X', 'F', 'X', 'F', 'F'},
+	{'F', 'F', 'F', 'W', 'F'},
+	{'F', 'X', 'F', 'F', 'F'}
+};
+double startingPosition[2] = {4, 4};
+
+double blockPosition[3] = {startingPosition[0], 1.12, startingPosition[1]};
+double blockDimens[3] = {1, 2, 1};
+double blockColor[3] = {1, 0, 0};
+int	   blockOrientation = BLOCK_VERTICAL;
+bool   movementDirection = DIRECTION_X;
+
+/*double blockPosition[3] = {startingPosition[0], 1.12 - 0.5, startingPosition[1]};
+double blockDimens[3] = {2, 1, 1};
+double blockColor[3] = {1, 0, 0};
+int	   blockOrientation = BLOCK_HORIZONTAL;
+bool   movementDirection = DIRECTION_X;*/
+
+bool isMoving = false;
+
+void drawCuboid(double* position, double* dimens, double* color) {
+	double x = position[0]; double y = position[1]; double z = position[2];
+	
+	double hL = dimens[0] / 2.0; double hH = dimens[1] / 2.0; double hB = dimens[2] / 2.0;
+
+	double faces[6][4][3] = {
+		{{x - hL, y + hH, z + hB}, {x + hL, y + hH, z + hB}, {x + hL, y - hH, z + hB}, {x - hL, y - hH, z + hB}},	//front
+		{{x + hL, y + hH, z + hB}, {x + hL, y + hH, z - hB}, {x + hL, y - hH, z - hB}, {x + hL, y - hH, z + hB}},	//right
+		{{x + hL, y + hH, z - hB}, {x - hL, y + hH, z - hB}, {x - hL, y - hH, z - hB}, {x + hL, y - hH, z - hB}},	//back
+		{{x - hL, y + hH, z - hB}, {x - hL, y + hH, z + hB}, {x - hL, y - hH, z + hB}, {x - hL, y - hH, z - hB}},	//left
+		{{x - hL, y + hH, z - hB}, {x + hL, y + hH, z - hB}, {x + hL, y + hH, z + hB}, {x - hL, y + hH, z + hB}},	//top
+		{{x - hL, y - hH, z + hB}, {x + hL, y - hH, z + hB}, {x + hL, y - hH, z - hB}, {x - hL, y - hH, z - hB}},	//bottom
+	};
+
+	glColor4d(color[0], color[1], color[2], color[3]);
+	glLineWidth(1);
+	glBegin(GL_QUADS);
+		for(int i = 0; i < 6; i++){
+			for(int j = 0; j < 4; j++){
+				glVertex3dv(faces[i][j]);
+			}
+		}
+	glEnd();
+
+	glColor4d(0, 0, 0, 1);
+	glLineWidth(1.5);
+	for(int i = 0; i < 6; i++){
+		glBegin(GL_LINE_LOOP);
+			for(int j = 0; j < 4; j++){
+				glVertex3dv(faces[i][j]);
+			}
+		glEnd();
+	}
+}
 
 /**
  * Draws 3 simple lines signifying the 3 positive axis. Only used for debugging purposes
@@ -30,30 +107,55 @@ void drawCoordinateSystem(){
 	glEnd();
 }
 
+void drawBoard(char board[BOARD_DIMENSIONS][BOARD_DIMENSIONS]){
+	double position[3] = {0, 0, 0};
+	double dimens[3] = {1, 0.2, 1};
+	double color[3] = {1, 1, 1};
+	double goalColor[3] = {1, 0, 1};
+
+	for(int i = 0; i < BOARD_DIMENSIONS; i++){
+		position[0] = 0;
+		for(int j = 0; j < BOARD_DIMENSIONS; j++){
+			if(board[i][j] == 'F')
+				drawCuboid(position, dimens, color);
+			if(board[i][j] == 'W')
+				drawCuboid(position, dimens, goalColor);
+			position[0]++;
+		}
+		position[2]++;
+	}
+}
+
+/*void animateMovement(double* position, int axis){
+	if(axis == X){
+
+		glRotated(rotateblock, 1, 0, 0);
+	}
+	else if(axis == Z){
+		
+	}
+}*/
+
 void display(){
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glLoadIdentity();
 
-	glTranslated(0,0,-10);
+	glTranslated(-(BOARD_DIMENSIONS	/ 2),0,-10 - (BOARD_DIMENSIONS	/ 2));
 	glRotated(rotateX, 1, 0, 0);
 	glRotated(rotateY, 0, 1, 0);
 
 	drawCoordinateSystem();
 
-	glColor3d(1,1,1);
-	glLineWidth(1);
-	glBegin(GL_QUADS);
-		glVertex3d(0,0,0);
-		glVertex3d(0,1,0);
-		glVertex3d(1,1,0);
-		glVertex3d(1,0,0);
-	glEnd();
+	drawBoard(board);
+
+	drawCuboid(blockPosition, blockDimens, blockColor);
 
 	glutSwapBuffers();
 }
 
 void lockResizing(int width, int height){
-	
+	glutReshapeWindow(WINDOW_WIDTH, WINDOW_HEIGHT);
+	display();
 }
 
 void arrows(int key, int x, int y){
@@ -84,18 +186,90 @@ void keyboard(unsigned char key, int x, int y) {
 		exit(0);
 		break;
 	case 'w':
-		
+		if(blockOrientation == BLOCK_VERTICAL){
+			blockOrientation = BLOCK_HORIZONTAL;
+			blockPosition[Y] = blockPosition[Y] - 0.5;
+			blockPosition[Z] = blockPosition[Z] - 1.5;
+			blockDimens[Y] = 1;
+			blockDimens[Z] = 2;
+			movementDirection = DIRECTION_Z;
+			isMoving = true;
+		}
+		else{
+			if(movementDirection == DIRECTION_X)
+				blockPosition[Z] = blockPosition[Z] - 1;
+			else if(movementDirection == DIRECTION_Z){
+				blockOrientation = BLOCK_VERTICAL;
+				blockPosition[Y] = blockPosition[Y] + 0.5;
+				blockPosition[Z] = blockPosition[Z] - 1.5;
+				blockDimens[Y] = 2;
+				blockDimens[Z] = 1;
+			}
+		}
 		break;
 	case 's':
-		
+		if(blockOrientation == BLOCK_VERTICAL){
+			blockOrientation = BLOCK_HORIZONTAL;
+			blockPosition[Y] = blockPosition[Y] - 0.5;
+			blockPosition[Z] = blockPosition[Z] + 1.5;
+			blockDimens[Y] = 1;
+			blockDimens[Z] = 2;
+			movementDirection = DIRECTION_Z;
+		}
+		else{
+			if(movementDirection == DIRECTION_X)
+				blockPosition[Z] = blockPosition[Z] + 1;
+			else if(movementDirection == DIRECTION_Z){
+				blockOrientation = BLOCK_VERTICAL;
+				blockPosition[Y] = blockPosition[Y] + 0.5;
+				blockPosition[Z] = blockPosition[Z] + 1.5;
+				blockDimens[Y] = 2;
+				blockDimens[Z] = 1;
+			}
+		}
 		break;
 	case 'a':
-		
+		if(blockOrientation == BLOCK_VERTICAL){
+			blockOrientation = BLOCK_HORIZONTAL;
+			blockPosition[X] -= 1.5;
+			blockPosition[Y] -= 0.5;
+			blockDimens[X] = 2;
+			blockDimens[Y] = 1;
+			movementDirection = DIRECTION_X;
+		}
+		else {
+			if(movementDirection == DIRECTION_X){
+				blockOrientation = BLOCK_VERTICAL;
+				blockPosition[X] -= 1.5;
+				blockPosition[Y] += 0.5;
+				blockDimens[X] = 1;
+				blockDimens[Y] = 2;
+			} else if(movementDirection == DIRECTION_Z)
+				blockPosition[X] -= 1;
+		}
 		break;
 	case 'd':
-		
+		if(blockOrientation == BLOCK_VERTICAL){
+			blockOrientation = BLOCK_HORIZONTAL;
+			blockPosition[X] += 1.5;
+			blockPosition[Y] -= 0.5;
+			blockDimens[X] = 2;
+			blockDimens[Y] = 1;
+			movementDirection = DIRECTION_X;
+		}
+		else {
+			if(movementDirection == DIRECTION_X){
+				blockOrientation = BLOCK_VERTICAL;
+				blockPosition[X] += 1.5;
+				blockPosition[Y] += 0.5;
+				blockDimens[X] = 1;
+				blockDimens[Y] = 2;
+			} else if(movementDirection == DIRECTION_Z)
+				blockPosition[X] += 1;
+		}
 		break;
 	}
+	glutPostRedisplay();
 }
 
 void timer(int x){
