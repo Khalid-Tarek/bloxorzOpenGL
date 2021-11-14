@@ -1,37 +1,48 @@
 #include "glutHelper.cpp"
 
-#define WINDOW_WIDTH		720
-#define WINDOW_HEIGHT		720
-#define BACKGROUND_COLOR	1, 0.4, 0, 1
+//Window Properties
+#define WINDOW_WIDTH		1024
+#define WINDOW_HEIGHT		1024
+#define FOV					60
+#define BACKGROUND_COLOR	0.6, 0.2, 0, 1
 
-#define X					10
-#define Y					20
-#define Z					30
+//Game States
+#define PLAYING				10
+#define WON					20
+#define LOST				30
 
-#define PLAYING				100
-#define WON					200
-#define LOST				300
+//Represention of the axis
+#define X					100
+#define Y					200
+#define Z					300
 
+//Representations of the movements
 #define FORWARDS			1000
 #define LEFT				2000
 #define BACKWARDS			3000
 #define RIGHT				4000
 
+//The steps of animating (whether rotation, or later on falling)
 #define ANIMATION_STEP		5
 
-bool isMoving = false;
-int currentRotateAround = 0;
-int currentAngle = 0;
-int queuedMovement = 0;
-
+//Current Game State
 int gameState = PLAYING;
 
+//The angles of view of the scene
+double sceneRotateX = 35;
+double sceneRotateY = 25;
+
+//Variables used for animation
+bool isMoving = false;
+int currentAngle = 0;
+int currentRotateAround = 0;
+int queuedMovement = 0;
+
+//The main objects used in the game
 Board level;
 Block block;
 
-double rotateX = 30;
-double rotateY = 30;
-
+//Periodically Checks for change in the gameState variable
 void checkGameState(){
 	if(gameState != PLAYING) return;
 	if(block.blockPosition.x == level.winningPos.x && 
@@ -90,6 +101,7 @@ void checkGameState(){
 	}
 }
 
+//Using theoretical knowledge we studied in the course, we animated the rotation based on the block's location and direction of rotation
 void animateMovement(int rotateAround){
 	if(isMoving){
 		double translateX = 0;
@@ -120,6 +132,7 @@ void animateMovement(int rotateAround){
 	}
 }
 
+//This method is queued to fire after the animation is finished
 void actuateMovement(){
 	
 	switch(queuedMovement){
@@ -147,16 +160,16 @@ void display(){
 	glLoadIdentity();
 
 	glTranslated(-(level.dimension / 2), 0, -10 - level.dimension);
-	glRotated(rotateX, 1, 0, 0);
-	glRotated(rotateY, 0, 1, 0);
+	glRotated(sceneRotateX, 1, 0, 0);
+	glRotated(sceneRotateY, 0, 1, 0);
 
-	drawCoordinateSystem();
+	//renderCoordinateSystem();
 
-	drawBoard(level);
+	renderBoard(level);
 
 	animateMovement(currentRotateAround);
 
-	drawCuboid(block);
+	renderCuboid(block);
 
 	glutSwapBuffers();
 }
@@ -169,22 +182,22 @@ void lockResizing(int width, int height){
 void arrows(int key, int x, int y){
 	switch(key){
 		case GLUT_KEY_DOWN:
-			rotateX += 5;
+			sceneRotateX += 5;
 			break;
 		case GLUT_KEY_UP:
-			rotateX -= 5;
+			sceneRotateX -= 5;
 			break;
 		case GLUT_KEY_LEFT:
-			rotateY += 5;
+			sceneRotateY += 5;
 			break;
 		case GLUT_KEY_RIGHT:
-			rotateY -= 5;
+			sceneRotateY -= 5;
 			break;
 	}
-	if(rotateX >= 360)	rotateX -= 360;
-	if(rotateX < 0)		rotateX += 360;
-	if(rotateY >= 360)	rotateY -= 360;
-	if(rotateY < 0)		rotateY += 360;
+	if(sceneRotateX >= 360)	sceneRotateX -= 360;
+	if(sceneRotateX < 0)		sceneRotateX += 360;
+	if(sceneRotateY >= 360)	sceneRotateY -= 360;
+	if(sceneRotateY < 0)		sceneRotateY += 360;
 	glutPostRedisplay();
 }
 
@@ -236,7 +249,7 @@ int main(int argc, char* argv[]) {
 	
 	Position startingPosition(level.startingPos.x, BLOCK_HAB, level.startingPos.z);
 	Dimensions dimensions(1, 2, 1, BLOCK_VERTICAL, DIRECTION_X);
-	double color[3] = {1, 0, 0};
+	double color[3] = {1, 1, 1};
 	block = Block(startingPosition, dimensions, color);
 
 	//GLUT initialization
@@ -260,7 +273,7 @@ int main(int argc, char* argv[]) {
 	glClearColor(BACKGROUND_COLOR);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	gluPerspective(60, WINDOW_WIDTH / WINDOW_HEIGHT, 2.0, 50.0);
+	gluPerspective(FOV, WINDOW_WIDTH / WINDOW_HEIGHT, 2.0, 100.0);
 	glMatrixMode(GL_MODELVIEW);
 
 	//Depth and Multisampling Setup
