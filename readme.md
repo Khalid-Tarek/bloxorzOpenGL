@@ -1,7 +1,7 @@
 # bloxorzOpenGL
 This project was created by The RAD Squad (B) for the Three Dimensional Graphics Course. We use the [GLUT](https://en.wikipedia.org/wiki/OpenGL_Utility_Toolkit) library in this project to manipulate the window, among other OpenGL functionalities.
 
-We acknowledge that the idea for this game goes back to [Damien Clark](https://damienclarke.me/#bloxorz). All rights go back to them. This is merely a reimplementation of the 
+We acknowledge that the idea for this game goes back to [Damien Clark](https://damienclarke.me/#bloxorz). All rights go back to them. This is merely a reimplementation of the game for the course's project.
 
 ## Prerequisites to run the game
 To run this game you must have OpenGL installed in the correct locations on your device:
