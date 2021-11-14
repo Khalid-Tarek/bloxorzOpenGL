@@ -8,7 +8,10 @@ To run this game you must have OpenGL installed in the correct locations on your
 1.  Move  **glut.h** into  **C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\include\GL\\**
 2.  Move  **glut32.lib**  into  **C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\lib\\**
 3.  **Move  glut32.dll into  C:\WindowsSystem32\\**
-emphasis on the last one
+
+emphasis on the last one.
+
+Just run the .exe file and have fun.
 
 ## Technologies Used
 
