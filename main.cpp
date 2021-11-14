@@ -68,6 +68,26 @@ void checkGameState(){
 			}
 		}
 	}
+
+	double playingColors[3] = {1, 0, 0};
+	double wonColors[3] = {0, 1, 0};
+	double lostColors[3] = {0, 0, 1};
+
+	if(gameState == PLAYING) {
+		block.blockColors[0] = playingColors[0];
+		block.blockColors[1] = playingColors[1];
+		block.blockColors[2] = playingColors[2];
+	}
+	else if(gameState == WON) {
+		block.blockColors[0] = wonColors[0];
+		block.blockColors[1] = wonColors[1];
+		block.blockColors[2] = wonColors[2];
+	}
+	else if(gameState == LOST) {
+		block.blockColors[0] = lostColors[0];
+		block.blockColors[1] = lostColors[1];
+		block.blockColors[2] = lostColors[2];
+	}
 }
 
 void animateMovement(int rotateAround){
@@ -78,10 +98,10 @@ void animateMovement(int rotateAround){
 
 		switch(rotateAround){
 		case -X:
-			translateZ = -(block.blockPosition.z + block.blockDimens.z / 2.0);
+			translateZ = -(block.blockPosition.z - block.blockDimens.z / 2.0);
 			break;
 		case X:
-			translateZ = -(block.blockPosition.z - block.blockDimens.z / 2.0);
+			translateZ = -(block.blockPosition.z + block.blockDimens.z / 2.0);
 			break;
 		case -Z:
 			translateX = -(block.blockPosition.x + block.blockDimens.x / 2.0);
@@ -136,8 +156,7 @@ void display(){
 
 	animateMovement(currentRotateAround);
 
-	if(gameState == PLAYING)
-		drawCuboid(block);
+	drawCuboid(block);
 
 	glutSwapBuffers();
 }
@@ -172,6 +191,7 @@ void arrows(int key, int x, int y){
 void keyboard(unsigned char key, int x, int y) {
 	if(key == 27) exit(0);
 	if(gameState != PLAYING) return;
+	if(isMoving) return;
 	switch(key){
 	case 'w':
 		currentRotateAround = -X;
