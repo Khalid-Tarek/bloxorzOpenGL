@@ -71,7 +71,7 @@
   <ItemGroup>
     <ClInclude Include="block.cpp" />
     <ClInclude Include="board.cpp" />
-    <ClInclude Include="glutHelper.h" />
+    <ClInclude Include="glutHelper.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

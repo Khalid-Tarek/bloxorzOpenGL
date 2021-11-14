@@ -1,12 +1,28 @@
-#include "glutHelper.h"
+#include "glutHelper.cpp"
 
-#define WINDOW_WIDTH			720
-#define WINDOW_HEIGHT			720
-#define BACKGROUND_COLOR		1, 0.4, 0, 1
+#define WINDOW_WIDTH		720
+#define WINDOW_HEIGHT		720
+#define BACKGROUND_COLOR	1, 0.4, 0, 1
 
-#define PLAYING					100
-#define WON						200
-#define LOST					300
+#define X					10
+#define Y					20
+#define Z					30
+
+#define PLAYING				100
+#define WON					200
+#define LOST				300
+
+#define FORWARDS			1000
+#define LEFT				2000
+#define BACKWARDS			3000
+#define RIGHT				4000
+
+#define ANIMATION_STEP		5
+
+bool isMoving = false;
+int currentRotateAround = 0;
+int currentAngle = 0;
+int queuedMovement = 0;
 
 int gameState = PLAYING;
 
@@ -54,11 +70,63 @@ void checkGameState(){
 	}
 }
 
+void animateMovement(int rotateAround){
+	if(isMoving){
+		double translateX = 0;
+		double translateY = -0.12;
+		double translateZ = 0;
+
+		switch(rotateAround){
+		case -X:
+			translateZ = -(block.blockPosition.z + block.blockDimens.z / 2.0);
+			break;
+		case X:
+			translateZ = -(block.blockPosition.z - block.blockDimens.z / 2.0);
+			break;
+		case -Z:
+			translateX = -(block.blockPosition.x + block.blockDimens.x / 2.0);
+			break;
+		case Z:
+			translateX = -(block.blockPosition.x - block.blockDimens.x / 2.0);
+			break;
+		}
+
+		glTranslated(-translateX, -translateY, -translateZ);
+		if(rotateAround == X || rotateAround == -X)
+			glRotated((rotateAround / X) * currentAngle, 1, 0, 0);
+		else
+			glRotated((rotateAround / Z) * currentAngle, 0, 0, 1);
+		glTranslated(+translateX, +translateY, +translateZ);
+	}
+}
+
+void actuateMovement(){
+	
+	switch(queuedMovement){
+	case FORWARDS:
+		block.moveForwards();
+		break;
+	case LEFT:
+		block.moveLeft();
+		break;
+	case BACKWARDS:
+		block.moveBackwards();
+		break;
+	case RIGHT:
+		block.moveRight();
+		break;
+	}
+
+	queuedMovement = 0;
+	currentAngle = 0;
+	isMoving = false;
+}
+
 void display(){
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glLoadIdentity();
 
-	glTranslated( -(level.dimension / 2), 0, -10 - level.dimension);
+	glTranslated(-(level.dimension / 2), 0, -10 - level.dimension);
 	glRotated(rotateX, 1, 0, 0);
 	glRotated(rotateY, 0, 1, 0);
 
@@ -66,7 +134,7 @@ void display(){
 
 	drawBoard(level);
 
-	
+	animateMovement(currentRotateAround);
 
 	if(gameState == PLAYING)
 		drawCuboid(block);
@@ -106,24 +174,39 @@ void keyboard(unsigned char key, int x, int y) {
 	if(gameState != PLAYING) return;
 	switch(key){
 	case 'w':
-		block.moveForwards();
+		currentRotateAround = -X;
+		isMoving = true;
+		queuedMovement = FORWARDS;
 		break;
 	case 's':
-		block.moveBackwards();
+		currentRotateAround = X;
+		isMoving = true;
+		queuedMovement = BACKWARDS;
 		break;
 	case 'a':
-		block.moveLeft();
+		currentRotateAround = Z;
+		isMoving = true;
+		queuedMovement = LEFT;
 		break;
 	case 'd':
-		block.moveRight();
+		currentRotateAround = -Z;
+		isMoving = true;
+		queuedMovement = RIGHT;
 		break;
 	}
 	glutPostRedisplay();
 }
 
 void timer(int x){
-	checkGameState();
-	glutTimerFunc(1, timer, x);
+	if(isMoving){
+		currentAngle = x;
+		if(x > 90) actuateMovement();
+		glutTimerFunc(1, timer, x + ANIMATION_STEP);
+	}
+	else {
+		checkGameState();
+		glutTimerFunc(1, timer, 0);
+	}
 	glutPostRedisplay();
 }
 

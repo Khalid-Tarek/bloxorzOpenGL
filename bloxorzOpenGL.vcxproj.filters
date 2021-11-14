@@ -20,13 +20,13 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="glutHelper.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="board.cpp">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="block.cpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="glutHelper.cpp">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
