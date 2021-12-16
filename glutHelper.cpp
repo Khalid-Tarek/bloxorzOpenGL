@@ -30,11 +30,14 @@ void renderCoordinateSystem(){
  *	A cuboid (in the graphical sense) is a closed, 3D, 6 rectangular-faced object that is rendered from it's absolute center
  */
 void renderCuboid(Block block) {
+	//If the block is completely under the board (+ a small bias for animation reasons), don't draw it
+	if(block.blockPosition.y < (-block.blockDimens.y) - 0.5) return;
+
 	//Get the 3D coordinate of the center of the block
 	double x = block.blockPosition.x;
 	double y = block.blockPosition.y;
 	double z = block.blockPosition.z;
-	
+
 	//Get half the dimensions of the block
 	double hL = block.blockDimens.x / 2.0;
 	double hH = block.blockDimens.y / 2.0;

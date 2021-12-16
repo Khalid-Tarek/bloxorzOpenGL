@@ -1,4 +1,5 @@
 #include "glutHelper.cpp"
+#include <queue>
 
 //Window Properties
 #define WINDOW_WIDTH		1024
@@ -6,21 +7,29 @@
 #define FOV					60
 #define BACKGROUND_COLOR	0.6, 0.2, 0, 1
 
+//Just None
+#define NONE				0
+
 //Game States
 #define PLAYING				10
 #define WON					20
 #define LOST				30
 
-//Represention of the axis
+//Representation of the axis
 #define X					100
 #define Y					200
 #define Z					300
 
+//Representations of axis positions
+#define BASE				1000
+#define MIDDLE				2000
+
 //Representations of the movements
-#define FORWARDS			1000
-#define LEFT				2000
-#define BACKWARDS			3000
-#define RIGHT				4000
+#define FORWARDS			10000
+#define LEFT				20000
+#define BACKWARDS			30000
+#define RIGHT				40000
+#define DOWNWARDS			50000
 
 //The steps of animating (whether rotation, or later on falling)
 #define ANIMATION_STEP		5
@@ -34,9 +43,12 @@ double sceneRotateY = 25;
 
 //Variables used for animation
 bool isMoving = false;
+bool isFalling = false;
+
 int currentAngle = 0;
-int currentRotateAround = 0;
-int queuedMovement = 0;
+int currentRotateAround = NONE;
+queue<int> queuedMovement;
+int axisPosition = BASE;
 
 //The main objects used in the game
 Board level;
@@ -45,41 +57,186 @@ Block block;
 //Periodically Checks for change in the gameState variable
 void checkGameState(){
 	if(gameState != PLAYING) return;
-	if(block.blockPosition.x == level.winningPos.x && 
-		block.blockPosition.z == level.winningPos.z) {
+	if(gameState == LOST && block.blockPosition.y < -block.blockDimens.y * 2) {isFalling = true; return;}
+
+	double x = block.blockPosition.x;
+	double z = block.blockPosition.z;
+
+	if(x == level.winningPos.x &&
+		z == level.winningPos.z) {
 		gameState = WON;
+		isFalling = true;
 		//TODO: ADD "YOU WON" POP UP
+		return;
 	}
+	
+	bool outOfBoundX = x < 0 || x > level.dimension - 1;
+	bool outOfBoundZ = z < 0 || z > level.dimension - 1; 
 
-	if(block.blockPosition.x < 0 || block.blockPosition.x > level.dimension - 1 ||
-		block.blockPosition.z < 0 || block.blockPosition.z > level.dimension - 1){
-		gameState = LOST;
-		//TODO: ADD "YOU LOST" POP UP
-	}
-
-	else if(block.blockDimens.orientation == BLOCK_VERTICAL){
-		if(level.board[(int)block.blockPosition.z][(int)block.blockPosition.x] == 'X'){
+	if(block.blockDimens.orientation == BLOCK_VERTICAL){
+		if(outOfBoundX || outOfBoundZ || level.board[(int)z][(int)x] == 'X'){
+			cout << "Fell vertically at (" << z << ", " << x << ")\n";
 			gameState = LOST;
-			cout << "Fell vertically at (" << block.blockPosition.z << ", " << block.blockPosition.x << ")\n";
+			isFalling = true;
+			//TODO: ADD "YOU LOST" POP UP
 		}
 	}
 	else if(block.blockDimens.orientation == BLOCK_HORIZONTAL){
+		bool emptyUnder1 = false;
+		bool emptyUnder2 = false;
+
 		if(block.blockDimens.direction == DIRECTION_X){
-			if(level.board[(int)block.blockPosition.z][(int)(block.blockPosition.x - 0.5)] == 'X' ||
-				level.board[(int)block.blockPosition.z][(int)(block.blockPosition.x + 0.5)] == 'X'){
-				gameState = LOST;
-				cout << "Fell horizontally at (" << block.blockPosition.z << ", " << block.blockPosition.x << ")\n";
+			int x1 = x - 0.5;
+			int x2 = x + 0.5;
+
+			emptyUnder1 = outOfBoundZ || x1 < 0 || x1 > level.dimension - 1 || level.board[(int)z][x1] == 'X';
+			emptyUnder2 = outOfBoundZ || x2 < 0 || x2 > level.dimension - 1 || level.board[(int)z][x2] == 'X';
+		}
+		else if(block.blockDimens.direction == DIRECTION_Z){
+			int z1 = z - 0.5;
+			int z2 = z + 0.5;
+
+			emptyUnder1 = outOfBoundX || z1 < 0 || z1 > level.dimension - 1 || level.board[z1][(int)x] == 'X';
+			emptyUnder2 = outOfBoundX || z2 < 0 || z2 > level.dimension - 1 || level.board[z2][(int)x] == 'X';
+		}
+
+		if(emptyUnder1 && emptyUnder2){
+			gameState = LOST;
+			cout << "Fell straight horizontally at (" << z << ", " << x << ")\n";
+			isFalling = true;
+			//TODO: ADD "YOU LOSE" POP UP
+		}
+		else if(emptyUnder1){
+			if(block.blockDimens.direction == DIRECTION_X){
+				currentRotateAround = Z;
+				queuedMovement.push(RIGHT);
 			}
-		
-		}else if(block.blockDimens.direction == DIRECTION_Z){
-			if(level.board[(int)(block.blockPosition.z - 0.5)][(int)block.blockPosition.x] == 'X' ||
-				level.board[(int)(block.blockPosition.z + 0.5)][(int)block.blockPosition.x] == 'X'){
-				gameState = LOST;
-				cout << "Fell horizontally at (" << block.blockPosition.z << ", " << block.blockPosition.x << ")\n";
+			else {
+				currentRotateAround = -X;
+				queuedMovement.push(FORWARDS);
 			}
+			axisPosition = MIDDLE;
+			queuedMovement.push(DOWNWARDS);
+			isMoving = true;
+
+			gameState = LOST;
+			cout << "Fell skewed horizontally at (" << block.blockPosition.z << ", " << block.blockPosition.x << ")\n";
+			//TODO: ADD "YOU LOSE" POP UP
+		}
+		else if(emptyUnder2){
+			if(block.blockDimens.direction == DIRECTION_X){
+				currentRotateAround = -Z;
+				queuedMovement.push(LEFT);
+			}
+			else{
+				currentRotateAround = X;
+				queuedMovement.push(BACKWARDS);
+			}
+			axisPosition = MIDDLE;
+			queuedMovement.push(DOWNWARDS);
+			isMoving = true;
+
+			gameState = LOST;
+			cout << "Fell skewed horizontally at (" << block.blockPosition.z << ", " << block.blockPosition.x << ")\n";
+			//TODO: ADD "YOU LOSE" POP UP
 		}
 	}
+}
 
+//Using theoretical knowledge we studied in the course, we animated the rotation based on the block's location and direction of rotation
+void animateMovement(int rotateAround, int axisPosition){
+	if(isMoving){
+		double translateX = 0;
+		double translateY = -0.12;
+		double translateZ = 0;
+
+		if(rotateAround == X || rotateAround == -X)
+			translateZ = -block.blockPosition.z;
+		else
+			translateX = -block.blockPosition.x;
+
+		if(axisPosition == BASE){
+			switch(rotateAround){
+			case -X:
+				translateZ += block.blockDimens.z / 2.0;
+				break;
+			case X:
+				translateZ -= block.blockDimens.z / 2.0;
+				break;
+			case -Z:
+				translateX -= block.blockDimens.x / 2.0;
+				break;
+			case Z:
+				translateX += block.blockDimens.x / 2.0;
+				break;
+			}
+		}
+
+		glTranslated(-translateX, -translateY, -translateZ);
+		if(rotateAround == X || rotateAround == -X)
+			glRotated((rotateAround / X) * currentAngle, 1, 0, 0);
+		else
+			glRotated((rotateAround / Z) * currentAngle, 0, 0, 1);
+		glTranslated(+translateX, +translateY, +translateZ);
+	}
+}
+
+//This method is queued to fire after the animation is finished
+void actuateMovement(){
+
+	if(axisPosition == BASE){
+		switch(queuedMovement.front()){
+		case FORWARDS:
+			block.moveForwards();
+			break;
+		case LEFT:
+			block.moveLeft();
+			break;
+		case BACKWARDS:
+			block.moveBackwards();
+			break;
+		case RIGHT:
+			block.moveRight();
+			break;
+		case DOWNWARDS:
+			isFalling = true;
+			break;
+		}
+	}
+	else {
+		switch(queuedMovement.front()){
+		case FORWARDS:
+			block.blockDimens.flipZ();
+			block.blockPosition.z -= 0.5;
+			break;
+		case LEFT:
+			block.blockDimens.flipX();
+			block.blockPosition.x += 0.5;
+			break;
+		case BACKWARDS:
+			block.blockDimens.flipZ();
+			block.blockPosition.z += 0.5;
+			break;
+		case RIGHT:
+			block.blockDimens.flipX();
+			block.blockPosition.x -= 0.5;
+			break;
+		case DOWNWARDS:
+			isFalling = true;
+			break;
+		}
+		block.blockPosition.y -= 0.2;
+	}
+
+	queuedMovement.pop();
+	currentAngle = 0;
+	isMoving = false;
+
+	if(queuedMovement.size() != 0) actuateMovement();
+}
+
+//This method sets the block color based on the game state
+void setBlockColor(){
 	double playingColors[3] = {1, 0, 0};
 	double wonColors[3] = {0, 1, 0};
 	double lostColors[3] = {0, 0, 1};
@@ -101,60 +258,6 @@ void checkGameState(){
 	}
 }
 
-//Using theoretical knowledge we studied in the course, we animated the rotation based on the block's location and direction of rotation
-void animateMovement(int rotateAround){
-	if(isMoving){
-		double translateX = 0;
-		double translateY = -0.12;
-		double translateZ = 0;
-
-		switch(rotateAround){
-		case -X:
-			translateZ = -(block.blockPosition.z - block.blockDimens.z / 2.0);
-			break;
-		case X:
-			translateZ = -(block.blockPosition.z + block.blockDimens.z / 2.0);
-			break;
-		case -Z:
-			translateX = -(block.blockPosition.x + block.blockDimens.x / 2.0);
-			break;
-		case Z:
-			translateX = -(block.blockPosition.x - block.blockDimens.x / 2.0);
-			break;
-		}
-
-		glTranslated(-translateX, -translateY, -translateZ);
-		if(rotateAround == X || rotateAround == -X)
-			glRotated((rotateAround / X) * currentAngle, 1, 0, 0);
-		else
-			glRotated((rotateAround / Z) * currentAngle, 0, 0, 1);
-		glTranslated(+translateX, +translateY, +translateZ);
-	}
-}
-
-//This method is queued to fire after the animation is finished
-void actuateMovement(){
-	
-	switch(queuedMovement){
-	case FORWARDS:
-		block.moveForwards();
-		break;
-	case LEFT:
-		block.moveLeft();
-		break;
-	case BACKWARDS:
-		block.moveBackwards();
-		break;
-	case RIGHT:
-		block.moveRight();
-		break;
-	}
-
-	queuedMovement = 0;
-	currentAngle = 0;
-	isMoving = false;
-}
-
 void display(){
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glLoadIdentity();
@@ -167,8 +270,9 @@ void display(){
 
 	renderBoard(level);
 
-	animateMovement(currentRotateAround);
+	animateMovement(currentRotateAround, axisPosition);
 
+	setBlockColor();
 	renderCuboid(block);
 
 	glutSwapBuffers();
@@ -203,30 +307,31 @@ void arrows(int key, int x, int y){
 
 void keyboard(unsigned char key, int x, int y) {
 	if(key == 27) exit(0);
+
 	if(gameState != PLAYING) return;
+
 	if(isMoving) return;
 	switch(key){
 	case 'w':
 		currentRotateAround = -X;
-		isMoving = true;
-		queuedMovement = FORWARDS;
+		queuedMovement.push(FORWARDS);
 		break;
 	case 's':
 		currentRotateAround = X;
-		isMoving = true;
-		queuedMovement = BACKWARDS;
+		queuedMovement.push(BACKWARDS);
 		break;
 	case 'a':
 		currentRotateAround = Z;
-		isMoving = true;
-		queuedMovement = LEFT;
+		queuedMovement.push(LEFT);
 		break;
 	case 'd':
 		currentRotateAround = -Z;
-		isMoving = true;
-		queuedMovement = RIGHT;
+		queuedMovement.push(RIGHT);
 		break;
 	}
+	axisPosition = BASE;
+	isMoving = true;
+
 	glutPostRedisplay();
 }
 
@@ -240,20 +345,22 @@ void timer(int x){
 		checkGameState();
 		glutTimerFunc(1, timer, 0);
 	}
+	if(isFalling) block.blockPosition.y -= ANIMATION_STEP / 100.0;
+
 	glutPostRedisplay();
 }
 
 int main(int argc, char* argv[]) {
 
 	level = Board(1);
-	
+
 	Position startingPosition(level.startingPos.x, BLOCK_HAB, level.startingPos.z);
 	Dimensions dimensions(1, 2, 1, BLOCK_VERTICAL, DIRECTION_X);
 	double color[3] = {1, 1, 1};
 	block = Block(startingPosition, dimensions, color);
 
 	//GLUT initialization
-	glutInit(&argc, argv); 
+	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH | GLUT_MULTISAMPLE);
 
 	//GLUT Window Initialization
@@ -263,7 +370,7 @@ int main(int argc, char* argv[]) {
 	glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
 
 	//Callback Attatchment
-	glutDisplayFunc(display); 
+	glutDisplayFunc(display);
 	glutReshapeFunc(lockResizing);
 	glutSpecialFunc(arrows);
 	glutKeyboardFunc(keyboard);
@@ -273,12 +380,12 @@ int main(int argc, char* argv[]) {
 	glClearColor(BACKGROUND_COLOR);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	gluPerspective(FOV, WINDOW_WIDTH / WINDOW_HEIGHT, 2.0, 100.0);
+	gluPerspective(FOV, WINDOW_WIDTH / WINDOW_HEIGHT, 2.0, 50.0);
 	glMatrixMode(GL_MODELVIEW);
 
 	//Depth and Multisampling Setup
 	glEnable(GL_DEPTH_TEST);
 
 	//glutFullScreen();
-	glutMainLoop(); 
+	glutMainLoop();
 }

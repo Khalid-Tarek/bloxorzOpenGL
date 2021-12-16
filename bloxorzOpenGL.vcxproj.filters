@@ -30,7 +30,4 @@
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
-  <ItemGroup>
-    <None Include="levels\1.txt" />
-  </ItemGroup>
 </Project>
