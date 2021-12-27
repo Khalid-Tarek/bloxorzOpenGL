@@ -36,13 +36,17 @@ public:
  *						* X -> Empty Tile
  *						* W -> Win Tile
  *						* T -> Trap
+ *	@field moves:		The number of moves the player has taken so far
+ *	@field optimal:		The lowest number of moves this level can be solved in
  *
  *	A level file is of (txt) extension, in the folder "levels/" in the same directory as main.cpp. It is in this form:
  *		* n
  *		* n lines of n long strings
  *		* x1 z1
  *		* x2 z2
- *	Where n is the dimension of the board, (x1, z1) are the coords of the start position, and (x2, z2) are the coords of the winning position 
+ *		* d
+ *	Where n is the dimension of the board, (x1, z1) are the coords of the start position, 
+ *	(x2, z2) are the coords of the winning position, and d is the number of optimal moves to win the game
  */
 class Board{
 public:
@@ -50,6 +54,8 @@ public:
 	Position winningPos;
 	int dimension;
 	vector<string> board;
+	int optimal;
+	int moves;
 
 	Board(){} //Default Constructor
 	Board(int level){
@@ -72,6 +78,12 @@ public:
 		x = (int) (in.get() - '0'); in.get();
 		z = (int) (in.get() - '0'); in.get();
 		this->winningPos = Position(x, 0, z);
+
+		optimal =  (int)(in.get() - '0') * 100;
+		optimal += (int)(in.get() - '0') * 10;
+		optimal += (int)(in.get() - '0'); in.get();
+
+		moves = 0;
 
 		in.close();
 	}

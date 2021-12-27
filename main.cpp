@@ -1,38 +1,37 @@
-#include "glutHelper.cpp"
-#include <queue>
+/*********************************************************************************************************	
+								 ____  _     __   __        ______
+								|  _ \| |    \ \ / /       |___  /
+								| |_) | | ___ \ V / ___  _ __ / / 
+								|  _ <| |/ _ \ > < / _ \| '__/ /  
+								| |_) | | (_) / . \ (_) | | / /__ 
+								|____/|_|\___/_/ \_\___/|_|/_____|
 
-//Window Properties
-#define WINDOW_WIDTH		1024
-#define WINDOW_HEIGHT		1024
-#define FOV					60
-#define BACKGROUND_COLOR	0.6, 0.2, 0, 1
+  Description:	This game was made by The Rad Squad (B) for 3D Graphics Course - EELU (Fall 2021-22)
 
-//Just None
-#define NONE				0
+				In this 3D game, you take control of a cuboid on a 2D board. Your goal is to reach
+				the goal by moving the cuboid around, rolling on its sides.
 
-//Game States
-#define PLAYING				10
-#define WON					20
-#define LOST				30
+				But be careful not to fall! As an added challenge, try to solve the level in the
+				optimal number of moves. Doing so will turn your block golden
 
-//Representation of the axis
-#define X					100
-#define Y					200
-#define Z					300
+  Developers:	Abdallah Kareem
+				Osama Sakr
 
-//Representations of axis positions
-#define BASE				1000
-#define MIDDLE				2000
 
-//Representations of the movements
-#define FORWARDS			10000
-#define LEFT				20000
-#define BACKWARDS			30000
-#define RIGHT				40000
-#define DOWNWARDS			50000
+  Project
+  Structure:	main.cpp		& main.h	--------------> Program Entry Point + main logic
+				glutHelper.cpp	& glutHelper.h -----------> All OpenGL rendering happens here in its 
+															respective functions
+				board.cpp --------------------------------> Board class + Position Class
+				block.cpp --------------------------------> Block class + Dimensions Class
 
-//The steps of animating (whether rotation, or later on falling)
-#define ANIMATION_STEP		5
+  Rights:		All rights go back to the original designer(s) of the game(s)
+						Bloxorz (1984):		Damien Clarke
+
+
+				This is a simple reimplementation of the original game(s), hope you enjoy it!
+*********************************************************************************************************/
+#include "main.h"
 
 //Current Game State
 int gameState = PLAYING;
@@ -44,7 +43,6 @@ double sceneRotateY = 25;
 //Variables used for animation
 bool isMoving = false;
 bool isFalling = false;
-
 int currentAngle = 0;
 int currentRotateAround = NONE;
 queue<int> queuedMovement;
@@ -104,7 +102,7 @@ void checkGameState(){
 			gameState = LOST;
 			cout << "Fell straight horizontally at (" << z << ", " << x << ")\n";
 			isFalling = true;
-			//TODO: ADD "YOU LOSE" POP UP
+			//TODO: ADD "YOU LOST" POP UP
 		}
 		else if(emptyUnder1){
 			if(block.blockDimens.direction == DIRECTION_X){
@@ -121,7 +119,7 @@ void checkGameState(){
 
 			gameState = LOST;
 			cout << "Fell skewed horizontally at (" << block.blockPosition.z << ", " << block.blockPosition.x << ")\n";
-			//TODO: ADD "YOU LOSE" POP UP
+			//TODO: ADD "YOU LOST" POP UP
 		}
 		else if(emptyUnder2){
 			if(block.blockDimens.direction == DIRECTION_X){
@@ -138,7 +136,7 @@ void checkGameState(){
 
 			gameState = LOST;
 			cout << "Fell skewed horizontally at (" << block.blockPosition.z << ", " << block.blockPosition.x << ")\n";
-			//TODO: ADD "YOU LOSE" POP UP
+			//TODO: ADD "YOU LOST" POP UP
 		}
 	}
 }
@@ -237,9 +235,10 @@ void actuateMovement(){
 
 //This method sets the block color based on the game state
 void setBlockColor(){
-	double playingColors[3] = {1, 0, 0};
-	double wonColors[3] = {0, 1, 0};
-	double lostColors[3] = {0, 0, 1};
+	double playingColors[3]		= {1, 0, 0};
+	double wonColors[3]			= {0, 1, 0};
+	double optimalWinColors[3]	= {1, 0.84, 0};
+	double lostColors[3]		= {0, 0, 1};
 
 	if(gameState == PLAYING) {
 		block.blockColors[0] = playingColors[0];
@@ -247,9 +246,16 @@ void setBlockColor(){
 		block.blockColors[2] = playingColors[2];
 	}
 	else if(gameState == WON) {
-		block.blockColors[0] = wonColors[0];
-		block.blockColors[1] = wonColors[1];
-		block.blockColors[2] = wonColors[2];
+		if(level.moves <= level.optimal){
+			block.blockColors[0] = optimalWinColors[0];
+			block.blockColors[1] = optimalWinColors[1];
+			block.blockColors[2] = optimalWinColors[2];
+		}
+		else {
+			block.blockColors[0] = wonColors[0];
+			block.blockColors[1] = wonColors[1];
+			block.blockColors[2] = wonColors[2];
+		}
 	}
 	else if(gameState == LOST) {
 		block.blockColors[0] = lostColors[0];
@@ -261,6 +267,8 @@ void setBlockColor(){
 void display(){
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glLoadIdentity();
+
+	renderGUI(level.moves, level.optimal);
 
 	glTranslated(-(level.dimension / 2), 0, -10 - level.dimension);
 	glRotated(sceneRotateX, 1, 0, 0);
@@ -332,6 +340,8 @@ void keyboard(unsigned char key, int x, int y) {
 	axisPosition = BASE;
 	isMoving = true;
 
+	level.moves++;
+
 	glutPostRedisplay();
 }
 
@@ -353,6 +363,8 @@ void timer(int x){
 int main(int argc, char* argv[]) {
 
 	level = Board(1);
+
+	cout << level.optimal << endl;
 
 	Position startingPosition(level.startingPos.x, BLOCK_HAB, level.startingPos.z);
 	Dimensions dimensions(1, 2, 1, BLOCK_VERTICAL, DIRECTION_X);

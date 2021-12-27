@@ -1,5 +1,41 @@
-#include "block.cpp"
-#include <GL\glut.h>
+#include "glutHelper.h"
+
+/**
+ *	Renders the GUI of the game.
+ *  This method is called before the matrix is shifted in front of the perspective so, we shift it by Z_DISTANCE
+ */
+void renderGUI(int moves, int optimal){
+	glPushMatrix();
+
+	glTranslated(0, 0, -Z_DISTANCE);		//Move infront of the origin (-Z) to simulate a screen
+
+	//Draw moves at top left
+	renderChar(0,  0, (moves / 100)			+ '0');
+	renderChar(1,  0, ((moves / 10) % 10)	+ '0');
+	renderChar(2,  0, (moves % 10)			+ '0');
+
+	//Draw optimal at top right
+	renderChar(19,  0, (optimal / 100)			+ '0');
+	renderChar(20,  0, ((optimal / 10) % 10)	+ '0');
+	renderChar(21,  0, (optimal % 10)			+ '0');
+
+	glPopMatrix();
+}
+
+//Draws one character at the passed in coordinates. (the screen usually spans from 0 to Z_DISTANCE in both directions). Origin is top left
+void renderChar(double x, double y, char c){
+
+	//Shift input, since it actually goes from -Z_DISTANCE / 2 to Z_DISTANCE / 2
+	x -= Z_DISTANCE / 2 + 1;
+	y += Z_DISTANCE / 2;
+
+	glPushMatrix();
+	glTranslated(x, y, 0);
+	glScaled(0.01, 0.01, 0.01);
+	glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, c);
+	glPopMatrix();
+
+}
 
 /**
  *	Renders 3 simple lines signifying the 3 positive axis. Only used for debugging purposes
