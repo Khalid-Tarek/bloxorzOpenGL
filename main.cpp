@@ -362,7 +362,7 @@ void timer(int x){
 
 int main(int argc, char* argv[]) {
 
-	level = Board(1);
+	level = Board(5);
 
 	cout << level.optimal << endl;
 
